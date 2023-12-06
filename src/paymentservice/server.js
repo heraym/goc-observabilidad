@@ -28,6 +28,10 @@ const logger = pino({
     }
   }
 });
+;
+const http = require("http");
+const gcpMetadata = require('gcp-metadata');
+
 
 class HipsterShopServer {
   constructor(protoRoot, port = HipsterShopServer.PORT) {
@@ -47,7 +51,31 @@ class HipsterShopServer {
    * @param {*} call  { ChargeRequest }
    * @param {*} callback  fn(err, ChargeResponse)
    */
-  static ChargeServiceHandler(call, callback) {
+  static async ChargeServiceHandler(call, callback) {
+
+    // Hernan - Llamada a VM
+    const projectId = await gcpMetadata.project('project-id');
+    var externalService = "servicio-externo.us-central1-a.c." + projectId + ".internal";
+    console.log("Calling External Service:" + externalService);	  
+    http.get(externalService, (resp) => {
+	  let data = '';
+
+           // Un fragmento de datos ha sido recibido.
+           resp.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            // Toda la respuesta ha sido recibida. Imprimir el resultado.
+            resp.on('end', () => {
+                console.log("External Service OK");
+            });
+
+    }).on("error", (err) => {
+         console.warn("External service not available");		
+         console.warn(err);
+         callback(err);
+    });
+
     try {
       logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
       const response = charge(call.request);

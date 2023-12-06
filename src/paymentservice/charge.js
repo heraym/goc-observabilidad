@@ -27,12 +27,6 @@ const logger = pino({
 });
 
 
-// Hernan - Firestore
-
-const {Firestore} = require('@google-cloud/firestore');
-const db = new Firestore();
-
-
 class CreditCardError extends Error {
   constructor (message) {
     super(message);
@@ -90,17 +84,6 @@ module.exports = function charge (request) {
  
   transaction = { transaction_id: uuidv4() };
   
-   // Grabar en Firestore
-    var pago = { "transaction": transaction.transaction_id,
-     "cardType": cardType,
-    "cardNumber": cardNumber,
-    "credit_card_expiration_year": year,
-    "credit_card_expiration_month": month,
-    "currency_code": amount.currency_code,
-    "amount": `${amount.units},${amount.nanos}`};
-    
-    const res = db.collection('payments').doc().set(pago);
-   
 
   return { transaction_id: uuidv4() };
 };
